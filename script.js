@@ -566,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!messages || messages.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 3;
+            cell.colSpan = 2;
             cell.textContent = 'Ничего не найдено';
             cell.style.textAlign = 'center';
             row.appendChild(cell);
@@ -580,14 +580,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Создаем ячейку для текста сообщения
             const textCell = document.createElement('td');
-            // Применяем санитизацию к тексту сообщения
             textCell.textContent = sanitizeAndValidateInput(message.text);
             row.appendChild(textCell);
-            
-            // Создаем ячейку для категории
-            const categoryCell = document.createElement('td');
-            categoryCell.textContent = sanitizeAndValidateInput(message.category || 'Не указана');
-            row.appendChild(categoryCell);
             
             // Создаем ячейку для рейтинга
             const ratingCell = document.createElement('td');
