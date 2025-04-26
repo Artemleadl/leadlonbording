@@ -1,0 +1,692 @@
+body {
+  min-height: 100vh; /* Чтобы центрирование по вертикали работало */
+  display: flex;
+  margin: 0; /* Убрать отступы по умолчанию у body */
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* Меняем с center на flex-start */
+  align-items: center;
+  flex-grow: 1;
+  min-height: 100vh;
+  padding-top: calc(50vh - 150px); /* Отступ сверху для центрирования */
+  box-sizing: border-box;
+}
+
+.input {
+  max-width: 190px;
+}
+
+.label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 1180px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 2px solid #5e5757;
+  padding: 10px 8px 10px 10px;
+  text-align: left;
+  box-shadow:
+    20px 20px 60px #3853c7,
+    -20px -20px 60px #19ad88;
+  margin-top: 0; /* Убирает верхний отступ */
+  height: 60px; /* Увеличиваем высоту в два раза */
+}
+
+/* Контейнер для кнопки поиска */
+.search-button-container {
+  margin: 40px 0 20px 0; /* Увеличиваем верхний отступ до 40px */
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 1180px;
+}
+
+.shortcut {
+  position: absolute;
+  top: 50%;
+  right: -3%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+  color: #c5c5c5;
+  background-color: #5e5757;
+  padding: 0.3em;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.search_bar {
+  background-color: transparent;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: rgb(111, 115, 119);
+  flex-grow: 1; /* Занять доступное пространство */
+  margin-right: 10px; /* Добавить небольшой отступ справа */
+  height: 100%; /* Чтобы поле ввода заполняло всю высоту контейнера */
+}
+
+/* --- Button Styles --- */
+/* Удаляем все стили .uiverse (примерно строки 75-336) */
+/* --- КОНЕЦ удаленных стилей .uiverse --- */
+
+/* Новые стили кнопки */
+.flex {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.outer-cont {
+  padding: 12px 40px; /* Увеличиваем горизонтальные отступы до 40px */
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  position: relative;
+  background: linear-gradient(90deg, #5bfcc4, #f593e4, #71a4f0);
+  border-radius: 12px;
+  color: #fff;
+  transition: all 0.3s ease;
+  box-shadow:
+    inset 0px 0px 5px #ffffffa9,
+    inset 0px 35px 30px #000,
+    0px 5px 10px #000000cc;
+  text-shadow: 1px 1px 1px #000;
+}
+.outer-cont::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 12px;
+  filter: blur(0);
+  z-index: -1;
+  box-shadow: none;
+  background: conic-gradient(
+    #00000000 80deg,
+    #40baf7,
+    #f34ad7,
+    #5bfcc4,
+    #00000000 280deg
+  );
+  transition: all 0.3s ease;
+}
+.outer-cont:hover::before {
+  filter: blur(15px);
+}
+.outer-cont:active::before {
+  filter: blur(5px);
+  transform: translateY(1px);
+}
+.outer-cont:active {
+  box-shadow:
+    inset 0px 0px 5px #ffffffa9,
+    inset 0px 35px 30px #000;
+  margin-top: 3px;
+}
+/* --- КОНЕЦ новых стилей кнопки --- */
+
+/* --- Error Message Styles --- */
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 5px;
+  /* height: 20px; /* Можно убрать, если уже задано inline */
+}
+
+/* --- User Provided Tooltip Styles (Applied Verbatim) --- */
+.tooltip-container {
+  position: relative;
+  display: inline-block;
+}
+
+.help-button {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.help-button:hover,
+.help-button:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 15px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #ffffff, #f8f9fa);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  color: #1f2937;
+  font-size: 14px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(229, 231, 235, 1);
+}
+
+/* Tooltip arrow */
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px;
+  border-style: solid;
+  border-color: #ffffff transparent transparent transparent;
+}
+
+.tooltip-container:hover .tooltip,
+.help-button:focus + .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+@keyframes glow {
+  0% {
+    text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(99, 102, 241, 0.7);
+  }
+  100% {
+    text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+  }
+}
+
+.tooltip strong {
+  animation: glow 2s infinite;
+  font-weight: 600;
+}
+
+.tooltip i {
+  margin-right: 6px;
+  color: #6366f1;
+}
+
+@media (max-width: 768px) {
+  .tooltip {
+    font-size: 13px;
+    padding: 10px 16px;
+  }
+
+  .help-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* --- Table Styles --- */
+.table-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: none;
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 14px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.invoice-table caption {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #64748b;
+  text-align: left;
+  caption-side: bottom;
+}
+
+.invoice-table th {
+  background-color: #f8fafc;
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.invoice-table th .uiverse {
+  margin: 0 auto;
+  display: block;
+  min-width: 120px;
+  font-size: 14px;
+}
+
+.invoice-table th .uiverse .wrapper {
+  padding: 8px 0;
+}
+
+.invoice-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.invoice-table tr:last-child td {
+  border-bottom: none;
+}
+
+.invoice-table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+.invoice-table tfoot {
+  background-color: #f8fafc;
+  font-weight: 600;
+}
+
+.w-100 {
+  width: 100px;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+/* --- Star Rating Styles --- */
+.rating > label {
+  margin-right: 4px;
+}
+
+.rating:not(:checked) > input {
+  display: none;
+}
+
+.rating:not(:checked) > label {
+  float: right;
+  cursor: pointer;
+  font-size: 30px;
+}
+
+.rating:not(:checked) > label > svg {
+  fill: #666;
+  transition: fill 0.3s ease;
+}
+
+.rating > input:checked ~ label > svg {
+  fill: #ffa723;
+}
+
+.rating:not(:checked) > label:hover ~ label > svg,
+.rating:not(:checked) > label:hover > svg {
+  fill: #ff9e0b;
+}
+
+#star1:hover ~ label > svg,
+#star1:hover > svg {
+  fill: #a23c3c !important;
+}
+
+#star2:hover ~ label > svg,
+#star2:hover > svg {
+  fill: #99542d !important;
+}
+
+#star3:hover ~ label > svg,
+#star3:hover > svg {
+  fill: #9f7e18 !important;
+}
+
+#star4:hover ~ label > svg,
+#star4:hover > svg {
+  fill: #22885e !important;
+}
+
+#star5:hover ~ label > svg,
+#star5:hover > svg {
+  fill: #7951ac !important;
+}
+
+#star1:checked ~ label > svg {
+  fill: #ef4444;
+}
+
+#star2:checked ~ label > svg {
+  fill: #e06c2b;
+}
+
+#star3:checked ~ label > svg {
+  fill: #eab308;
+}
+
+#star4:checked ~ label > svg {
+  fill: #19c37d;
+}
+
+#star5:checked ~ label > svg {
+  fill: #ab68ff;
+}
+
+/* Дополнительные стили для рейтинга в таблице */
+.invoice-table .rating {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.invoice-table .rating label {
+  font-size: 20px; /* Немного уменьшен размер для компактности */
+  margin-right: 2px; /* Меньший отступ между звездами */
+}
+
+.invoice-table .rating label svg {
+  width: 18px; /* Уменьшенный размер SVG */
+  height: 18px;
+}
+
+.invoice-table td .rating {
+  min-width: 120px; /* Минимальная ширина для рейтинга */
+}
+
+/* --- Стили для карточек --- */
+.cards-container {
+  display: flex !important; /* Принудительно отображаем контейнер карточек */
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 0;
+  margin: 2rem auto;
+  width: 100%;
+  max-width: 1180px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.card {
+  position: relative;
+  flex: 1;
+  width: calc((1180px - 60px) / 3); /* Уменьшаем общий отступ до 60px */
+  min-width: 340px; /* Уменьшаем минимальную ширину */
+  max-width: 360px; /* Уменьшаем максимальную ширину */
+  height: 500px;
+  perspective: 1000px;
+  margin: 0 10px; /* Уменьшаем боковые отступы */
+  z-index: 1;
+  transition: z-index 0s 0.4s;
+  display: inline-block;
+}
+
+.card:hover {
+  z-index: 10;
+  transition: z-index 0s 0s;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.card:hover .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  background-color: #212121;
+  border: 1px solid #fff;
+  padding: 1.6rem;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+.card_title {
+  display: block;
+  font-family: sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+  color: #fff;
+  position: relative;
+  margin: 0;
+  margin-bottom: 1rem;     /* Отступ ПОД линией (одинаковый для всех) */
+  overflow: hidden;
+  border-radius: 0;
+  border-bottom: 1px solid #fff;
+  background: transparent;
+  padding-bottom: 1.5rem; /* Отступ МЕЖДУ текстом заголовка и линией */
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.price {
+  margin-top: 30px; /* Возвращаем/добавляем отступ над ценой */
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 4px;
+  font-family: sans-serif;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.price::before {
+  content: "";
+  margin-top: 8px;
+  font-size: 1.75rem;
+  line-height: 2rem;
+}
+
+.price::after {
+  content: "";
+  align-self: flex-end;
+  font-size: 1.75rem;
+  line-height: 2rem;
+}
+
+.price_description {
+  display: none; /* Скрываем на лицевой стороне */
+}
+
+.card-back .description {
+  flex-grow: 1;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: normal;
+  text-align: left;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.lists {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.list svg {
+  display: none;
+}
+
+.list span {
+  margin-left: 0;
+  display: block;
+  font-family: sans-serif;
+  position: relative;
+  padding-left: 0;
+}
+
+.list span::before {
+  content: "";
+  display: none;
+}
+
+.subheader {
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 1);
+}
+
+.secondary_text {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.5rem;
+  text-align: left;
+  font-style: normal;
+}
+
+.action {
+  display: block;
+  width: 100%;
+  background-color: #fff;
+  padding: 10px 20px;
+  text-transform: uppercase;
+  color: #000;
+  outline: 0;
+  border: 0;
+  border-radius: 10px;
+  margin-top: 20px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-top: auto;
+}
+
+.action:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.flip-hint {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  left: 0;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+/* Новые стили для задней стороны карточки */
+.card-back .title { /* "Что получаешь:" */
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-align: center;
+  margin-top: 10px; /* ИЗМЕНЯЕМ 30px на 10px */
+}
+
+/* Медиа-запрос для мобильных устройств */
+@media (max-width: 640px) {
+  .cards-container {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    gap: 1rem;
+  }
+  
+  .card {
+    width: 95%;
+    max-width: 380px;
+    margin: 0;
+  }
+}
+
+/* Добавление сглаживания трансформации для предотвращения глитчей */
+.card-inner, .card-front, .card-back {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-transition: all 0.8s ease;
+  transition: all 0.8s ease;
+}
+
+/* Стили для логотипа */
+.logo {
+  display: block; /* Чтобы margin работал */
+  width: 300px; /* Увеличиваем ширину в два раза */
+  height: auto; /* Сохраняем пропорции */
+  margin: -180px auto 60px auto; /* Увеличиваем нижний отступ до 60px */
+}
+
+/* Новые стили для волновой анимации загрузки (из запроса пользователя) */
+/* .wave-container { ... } */
+/* .wave { ... } */
+/* @keyframes wave { ... } */
+/* .wave:nth-child(...) { ... } */
+
+/* Удаляем старые стили контейнера спиннера и сообщения о загрузке */
+/* Стили для анимации загрузки */
+.loading-spinner {
+    display: none;
+    width: 50px;
+    height: 50px;
+    margin: 20px auto;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-container {
+    display: none;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.loading-text {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #666;
+} 
