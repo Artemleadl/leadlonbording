@@ -714,4 +714,37 @@ body {
     margin-top: 10px;
     font-size: 16px;
     color: #666;
+}
+
+/* Стили для пагинации */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.pagination button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pagination button:hover {
+    background: #0056b3;
+}
+
+.pagination button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination span {
+    color: #666;
+    font-size: 14px;
 } 

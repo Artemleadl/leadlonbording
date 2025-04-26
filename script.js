@@ -95,16 +95,99 @@ document.addEventListener('DOMContentLoaded', () => {
     // ДОБАВЛЕНО: Вызываем функцию загрузки данных
     loadMessagesFromJSON();
     
-    // Функция для загрузки данных из JSON файла
+    // Функция для валидации структуры сообщения
+    function validateMessageStructure(message) {
+        // Проверяем наличие обязательных полей
+        if (!message || typeof message !== 'object') {
+            console.error('Некорректная структура сообщения:', message);
+            return false;
+        }
+
+        // Проверяем обязательные поля
+        if (!message.text || typeof message.text !== 'string') {
+            console.error('Отсутствует или некорректное поле text:', message);
+            return false;
+        }
+
+        if (!message.category || typeof message.category !== 'string') {
+            console.error('Отсутствует или некорректное поле category:', message);
+            return false;
+        }
+
+        if (typeof message.rating !== 'number' || message.rating < 1 || message.rating > 5) {
+            console.error('Некорректный рейтинг:', message.rating);
+            return false;
+        }
+
+        // Проверяем длину текста
+        if (message.text.length > 1000) {
+            console.warn('Текст сообщения превышает максимальную длину:', message.text.length);
+            message.text = message.text.substring(0, 1000);
+        }
+
+        // Проверяем категорию на соответствие допустимым значениям
+        const validCategories = ['psychology', 'develop', 'marketing', 'design'];
+        if (!validCategories.includes(message.category)) {
+            console.warn('Недопустимая категория:', message.category);
+            message.category = 'develop'; // Устанавливаем значение по умолчанию
+        }
+
+        return true;
+    }
+
+    // Функция для сохранения данных в localStorage
+    function cacheMessages(messages) {
+        try {
+            const cacheData = {
+                timestamp: Date.now(),
+                messages: messages
+            };
+            localStorage.setItem('messagesCache', JSON.stringify(cacheData));
+            console.log('Данные успешно закэшированы');
+        } catch (error) {
+            console.error('Ошибка при кэшировании данных:', error);
+        }
+    }
+
+    // Функция для загрузки данных из кэша
+    function loadFromCache() {
+        try {
+            const cached = localStorage.getItem('messagesCache');
+            if (!cached) return null;
+
+            const cacheData = JSON.parse(cached);
+            const cacheAge = Date.now() - cacheData.timestamp;
+            
+            // Проверяем актуальность кэша (24 часа)
+            if (cacheAge > 24 * 60 * 60 * 1000) {
+                console.log('Кэш устарел');
+                return null;
+            }
+
+            console.log('Загружены данные из кэша');
+            return cacheData.messages;
+        } catch (error) {
+            console.error('Ошибка при загрузке из кэша:', error);
+            return null;
+        }
+    }
+
+    // Модифицируем функцию загрузки данных
     function loadMessagesFromJSON() {
         console.log('Загрузка данных из JSON файла... Попытка #' + (++jsonLoadAttempts));
         
-        // Пробуем загрузить данные из JSON
+        // Пробуем загрузить из кэша
+        const cachedMessages = loadFromCache();
+        if (cachedMessages) {
+            allMessagesFromJSON = cachedMessages;
+            jsonDataLoaded = true;
+            console.log('Используем кэшированные данные');
+            return;
+        }
+        
         try {
-            // Сначала пробуем fetch API
             if (window.fetch) {
                 console.log('Используем fetch API для загрузки JSON');
-                // Модифицируем путь для работы на GitHub Pages
                 const jsonPath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
                     ? 'data/messages.json' 
                     : '/leadlonbording/data/messages.json';
@@ -120,29 +203,44 @@ document.addEventListener('DOMContentLoaded', () => {
                         return response.json();
                     })
                     .then(data => {
-                        console.log(`Успешно загружено ${data.length} сообщений из JSON через fetch`);
-                        allMessagesFromJSON = data;
+                        const validMessages = data.filter(message => validateMessageStructure(message));
+                        console.log(`Загружено ${data.length} сообщений, валидных: ${validMessages.length}`);
+                        
+                        if (validMessages.length === 0) {
+                            throw new Error('Нет валидных сообщений в данных');
+                        }
+                        
+                        allMessagesFromJSON = validMessages;
                         jsonDataLoaded = true;
+                        
+                        // Кэшируем валидные данные
+                        cacheMessages(validMessages);
                         
                         // Выводим первые 3 сообщения для проверки
                         console.log('Примеры загруженных сообщений (fetch):');
-                        data.slice(0, 3).forEach((msg, i) => {
+                        validMessages.slice(0, 3).forEach((msg, i) => {
                             console.log(`${i + 1}. ${msg.text.substring(0, 100)}...`);
                         });
                     })
                     .catch(error => {
                         console.error('Ошибка при загрузке через fetch:', error);
-                        // Если fetch не сработал, пробуем XMLHttpRequest
                         loadWithXHR();
                     });
             } else {
-                // Если fetch недоступен, используем XMLHttpRequest
                 console.log('Fetch API недоступен, используем XMLHttpRequest');
                 loadWithXHR();
             }
         } catch (error) {
             console.error('Критическая ошибка при загрузке данных:', error);
-            console.log('Не удалось загрузить данные из JSON');
+            // Пробуем загрузить из кэша при ошибке
+            const cachedMessages = loadFromCache();
+            if (cachedMessages) {
+                allMessagesFromJSON = cachedMessages;
+                jsonDataLoaded = true;
+                console.log('Используем кэшированные данные после ошибки');
+            } else {
+                console.log('Не удалось загрузить данные из JSON и кэша');
+            }
         }
     }
     
@@ -405,58 +503,104 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Константы для пагинации
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+    let totalPages = 1;
+
+    // Функция для пагинации результатов
+    function paginateResults(messages) {
+        const startIndex = (currentPage - 1) * PAGE_SIZE;
+        const endIndex = startIndex + PAGE_SIZE;
+        totalPages = Math.ceil(messages.length / PAGE_SIZE);
+        return messages.slice(startIndex, endIndex);
+    }
+
+    // Функция для создания элементов пагинации
+    function createPagination() {
+        const paginationContainer = document.createElement('div');
+        paginationContainer.className = 'pagination';
+        
+        // Кнопка "Предыдущая страница"
+        if (currentPage > 1) {
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '←';
+            prevButton.onclick = () => {
+                currentPage--;
+                displayMessages(filterMessagesByRelevance(allMessagesFromJSON, lastQuery));
+            };
+            paginationContainer.appendChild(prevButton);
+        }
+        
+        // Номер текущей страницы
+        const pageInfo = document.createElement('span');
+        pageInfo.textContent = `Страница ${currentPage} из ${totalPages}`;
+        paginationContainer.appendChild(pageInfo);
+        
+        // Кнопка "Следующая страница"
+        if (currentPage < totalPages) {
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '→';
+            nextButton.onclick = () => {
+                currentPage++;
+                displayMessages(filterMessagesByRelevance(allMessagesFromJSON, lastQuery));
+            };
+            paginationContainer.appendChild(nextButton);
+        }
+        
+        return paginationContainer;
+    }
+
     // Изменяем функцию отображения сообщений
     function displayMessages(messages) {
         // Если таблица не найдена, прекращаем выполнение
         if (!tableBody || !tableContainer) {
-            console.error('Элементы таблицы не найдены');
+            console.error('ОШИБКА: Таблица не найдена!');
             return;
         }
-        
-        console.log(`Отображение ${messages.length} сообщений в таблице`);
-        
+
         // Очищаем таблицу
         tableBody.innerHTML = '';
-        
-        // Если нет сообщений, показываем сообщение об отсутствии результатов
-        if (messages.length === 0) {
-            console.log('Нет результатов для отображения');
+
+        // Если сообщений нет, показываем сообщение об этом
+        if (!messages || messages.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td colspan="2" style="text-align: center; padding: 20px;">
-                    Нет результатов по вашему запросу
-                </td>
-            `;
+            const cell = document.createElement('td');
+            cell.colSpan = 3;
+            cell.textContent = 'Ничего не найдено';
+            cell.style.textAlign = 'center';
+            row.appendChild(cell);
             tableBody.appendChild(row);
-        } else {
-            console.log(`Добавляем ${messages.length} сообщений в таблицу`);
-            // Добавляем сообщения в таблицу
-            messages.forEach((message, index) => {
-                const row = document.createElement('tr');
-                
-                // Проверка на наличие текста сообщения
-                const messageText = message && message.text ? message.text : 'Ошибка: текст сообщения отсутствует';
-                
-                console.log(`Сообщение ${index + 1}: ${messageText.substring(0, 50)}...`);
-                
-                row.innerHTML = `
-                    <td>${messageText}</td>
-                    <td>${createRatingStars(index + 1)}</td>
-                `;
-                tableBody.appendChild(row);
-            });
+            return;
         }
-        
-        // Таблица всегда видима
+
+        // Добавляем сообщения в таблицу
+        messages.forEach((message, index) => {
+            const row = document.createElement('tr');
+            
+            // Создаем ячейку для текста сообщения
+            const textCell = document.createElement('td');
+            // Применяем санитизацию к тексту сообщения
+            textCell.textContent = sanitizeAndValidateInput(message.text);
+            row.appendChild(textCell);
+            
+            // Создаем ячейку для категории
+            const categoryCell = document.createElement('td');
+            categoryCell.textContent = sanitizeAndValidateInput(message.category || 'Не указана');
+            row.appendChild(categoryCell);
+            
+            // Создаем ячейку для рейтинга
+            const ratingCell = document.createElement('td');
+            ratingCell.innerHTML = createRatingStars(index);
+            row.appendChild(ratingCell);
+            
+            tableBody.appendChild(row);
+        });
+
+        // Показываем таблицу
         tableContainer.style.display = 'block';
-        
-        // Оставляем видимыми и карточки цен
-        if (priceCards) {
-            priceCards.style.display = 'block';
-            console.log('Карточки с ценами остаются видимыми');
-        }
-        
-        console.log('Таблица с результатами отображена');
+        tableContainer.style.visibility = 'visible';
+        tableContainer.style.opacity = '1';
     }
 
     // Отображение сообщений в таблице
@@ -506,11 +650,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Добавляем обработчик события для кнопки поиска
+    // Функция для санитизации и валидации ввода
+    function sanitizeAndValidateInput(input) {
+        // Базовые проверки
+        if (typeof input !== 'string') {
+            console.error('Invalid input type:', typeof input);
+            return '';
+        }
+
+        // Удаляем потенциально опасные символы
+        let sanitized = input
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+        // Проверка на максимальную длину
+        const MAX_LENGTH = 1000;
+        if (sanitized.length > MAX_LENGTH) {
+            console.warn('Input exceeded maximum length');
+            sanitized = sanitized.substring(0, MAX_LENGTH);
+        }
+
+        // Проверка на наличие потенциально опасных паттернов
+        const dangerousPatterns = [
+            /javascript:/i,
+            /data:/i,
+            /vbscript:/i,
+            /on\w+=/i
+        ];
+
+        for (const pattern of dangerousPatterns) {
+            if (pattern.test(sanitized)) {
+                console.warn('Potentially dangerous pattern detected');
+                sanitized = sanitized.replace(pattern, '');
+            }
+        }
+
+        return sanitized;
+    }
+
+    // Модифицируем обработчик события для кнопки поиска
     searchButton.addEventListener('click', function() {
         console.log('Кнопка поиска нажата');
-        const query = searchInput.value.trim();
-        console.log('Поисковый запрос:', query);
+        const rawQuery = searchInput.value.trim();
+        
+        // Применяем санитизацию и валидацию
+        const query = sanitizeAndValidateInput(rawQuery);
+        console.log('Поисковый запрос после санитизации:', query);
         
         if (query.length < 3) {
             console.log('Запрос слишком короткий');
@@ -537,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Найдено сообщений:', filteredMessages.length);
         
         // Отображаем результаты
-        displayMessagesInTable(filteredMessages);
+        displayMessages(filteredMessages);
     });
 
     // Добавляем обработку нажатия Enter в поле поиска
