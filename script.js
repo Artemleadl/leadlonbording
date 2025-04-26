@@ -101,7 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Сначала пробуем fetch API
             if (window.fetch) {
                 console.log('Используем fetch API для загрузки JSON');
-                fetch('data/messages.json')
+                // Модифицируем путь для работы на GitHub Pages
+                const jsonPath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? 'data/messages.json' 
+                    : '/leadlonbording/data/messages.json';
+                
+                console.log('Путь к JSON файлу:', jsonPath);
+                
+                fetch(jsonPath)
                     .then(response => {
                         console.log('Fetch response status:', response.status);
                         if (!response.ok) {
@@ -140,7 +147,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadWithXHR() {
         console.log('Загрузка с использованием XMLHttpRequest');
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'data/messages.json', true);
+        
+        // Модифицируем путь для работы на GitHub Pages
+        const jsonPath = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'data/messages.json' 
+            : '/leadlonbording/data/messages.json';
+        
+        console.log('Путь к JSON файлу (XHR):', jsonPath);
+        
+        xhr.open('GET', jsonPath, true);
         
         xhr.onload = function() {
             console.log('XHR onload status:', xhr.status);
@@ -164,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 console.error('Ошибка при загрузке JSON. Статус:', xhr.status);
-                console.error('Путь запроса:', 'data/messages.json');
+                console.error('Путь запроса:', jsonPath);
                 // Пробуем загрузить из альтернативного пути
                 tryAlternativePath();
             }
@@ -172,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         xhr.onerror = function(e) {
             console.error('Ошибка сети при загрузке JSON:', e);
-            console.error('Путь запроса:', 'data/messages.json');
+            console.error('Путь запроса:', jsonPath);
             // Пробуем загрузить из альтернативного пути
             tryAlternativePath();
         };
@@ -189,7 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
             '/data/messages.json',
             './data/messages.json',
             '../data/messages.json',
-            'messages.json'
+            'messages.json',
+            '/leadlonbording/data/messages.json'
         ];
         
         const path = alternativePaths[jsonLoadAttempts % alternativePaths.length];
