@@ -503,67 +503,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Константы для пагинации
-    const PAGE_SIZE = 10;
-    let currentPage = 1;
-    let totalPages = 1;
-
-    // Функция для пагинации результатов
-    function paginateResults(messages) {
-        const startIndex = (currentPage - 1) * PAGE_SIZE;
-        const endIndex = startIndex + PAGE_SIZE;
-        totalPages = Math.ceil(messages.length / PAGE_SIZE);
-        return messages.slice(startIndex, endIndex);
-    }
-
-    // Функция для создания элементов пагинации
-    function createPagination() {
-        const paginationContainer = document.createElement('div');
-        paginationContainer.className = 'pagination';
-        
-        // Кнопка "Предыдущая страница"
-        if (currentPage > 1) {
-            const prevButton = document.createElement('button');
-            prevButton.textContent = '←';
-            prevButton.onclick = () => {
-                currentPage--;
-                displayMessages(filterMessagesByRelevance(allMessagesFromJSON, lastQuery));
-            };
-            paginationContainer.appendChild(prevButton);
-        }
-        
-        // Номер текущей страницы
-        const pageInfo = document.createElement('span');
-        pageInfo.textContent = `Страница ${currentPage} из ${totalPages}`;
-        paginationContainer.appendChild(pageInfo);
-        
-        // Кнопка "Следующая страница"
-        if (currentPage < totalPages) {
-            const nextButton = document.createElement('button');
-            nextButton.textContent = '→';
-            nextButton.onclick = () => {
-                currentPage++;
-                displayMessages(filterMessagesByRelevance(allMessagesFromJSON, lastQuery));
-            };
-            paginationContainer.appendChild(nextButton);
-        }
-        
-        return paginationContainer;
-    }
-
-    // Изменяем функцию отображения сообщений
+    // --- ОТОБРАЖЕНИЕ ТОЛЬКО ПЕРВЫХ 10 СООБЩЕНИЙ ---
     function displayMessages(messages) {
-        // Если таблица не найдена, прекращаем выполнение
         if (!tableBody || !tableContainer) {
             console.error('ОШИБКА: Таблица не найдена!');
             return;
         }
-
-        // Очищаем таблицу
         tableBody.innerHTML = '';
-
-        // Если сообщений нет, показываем сообщение об этом
-        if (!messages || messages.length === 0) {
+        const toShow = messages.slice(0, 10);
+        if (!toShow || toShow.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
             cell.colSpan = 2;
@@ -571,78 +519,55 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.style.textAlign = 'center';
             row.appendChild(cell);
             tableBody.appendChild(row);
+        } else {
+            toShow.forEach((message, index) => {
+                const row = document.createElement('tr');
+                const textCell = document.createElement('td');
+                textCell.textContent = sanitizeAndValidateInput(message.text);
+                row.appendChild(textCell);
+                const ratingCell = document.createElement('td');
+                ratingCell.innerHTML = createRatingStars(index);
+                row.appendChild(ratingCell);
+                tableBody.appendChild(row);
+            });
+        }
+        tableContainer.style.display = 'block';
+        tableContainer.style.visibility = 'visible';
+        tableContainer.style.opacity = '1';
+        // Удаляем пагинацию, если она была
+        let pagBlock = document.querySelector('.pagination');
+        if (pagBlock) pagBlock.remove();
+    }
+
+    // --- Поиск с учётом пагинации ---
+    searchButton.addEventListener('click', function() {
+        console.log('Кнопка поиска нажата');
+        const rawQuery = searchInput.value.trim();
+        const query = sanitizeAndValidateInput(rawQuery);
+        if (query.length < 3) {
+            errorMessageElement.textContent = 'Пожалуйста, введите минимум 3 символа для поиска';
+            errorMessageElement.classList.add('visible');
             return;
         }
-
-        // Добавляем сообщения в таблицу
-        messages.forEach((message, index) => {
-            const row = document.createElement('tr');
-            
-            // Создаем ячейку для текста сообщения
-            const textCell = document.createElement('td');
-            textCell.textContent = sanitizeAndValidateInput(message.text);
-            row.appendChild(textCell);
-            
-            // Создаем ячейку для рейтинга
-            const ratingCell = document.createElement('td');
-            ratingCell.innerHTML = createRatingStars(index);
-            row.appendChild(ratingCell);
-            
-            tableBody.appendChild(row);
-        });
-
-        // Показываем таблицу
         tableContainer.style.display = 'block';
-        tableContainer.style.visibility = 'visible';
-        tableContainer.style.opacity = '1';
-    }
-
-    // Отображение сообщений в таблице
-    function displayMessagesInTable(messages) {
-        console.log(`Отображаем ${messages.length} сообщений в таблице`);
-        
-        // Очищаем таблицу
         tableBody.innerHTML = '';
-        
-        // Отображаем максимум 10 сообщений
-        const messagesToShow = messages.slice(0, 10);
-        
-        // Добавляем сообщения в таблицу
-        messagesToShow.forEach((message, index) => {
-            const row = document.createElement('tr');
-            
-            // Создаем звезды рейтинга
-            const ratingStars = createRatingStars(message.rating || 0);
-            
-            // Рейтинг формируем в отдельной ячейке
-            const ratingCell = document.createElement('td');
-            ratingCell.className = 'rating-cell';
-            ratingCell.innerHTML = ratingStars;
-            
-            // Текст сообщения
-            const textCell = document.createElement('td');
-            textCell.className = 'message-text';
-            textCell.textContent = message.text;
-            
-            // Добавляем ячейки в строку
-            row.appendChild(ratingCell);
-            row.appendChild(textCell);
-            
-            // Добавляем строку в таблицу
-            tableBody.appendChild(row);
-        });
-        
-        // ПРИНУДИТЕЛЬНО ПОКАЗЫВАЕМ ТАБЛИЦУ
-        console.log('Принудительное отображение таблицы после добавления сообщений');
-        tableContainer.style.display = 'block';
-        tableContainer.style.visibility = 'visible';
-        tableContainer.style.opacity = '1';
-        
-        // Скрываем индикатор загрузки
-        if (loadingContainer) {
-            loadingContainer.style.display = 'none';
+        errorMessageElement.classList.remove('visible');
+        if (!jsonDataLoaded) {
+            loadMessagesFromJSON();
         }
-    }
+        const filteredMessages = filterMessagesByRelevance(allMessagesFromJSON, query);
+        displayMessages(filteredMessages);
+    });
+
+    searchInput.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') {
+            searchButton.click();
+        }
+        if (errorMessageElement && errorMessageElement.classList.contains('visible')) {
+            errorMessageElement.textContent = '';
+            errorMessageElement.classList.remove('visible');
+        }
+    });
 
     // Функция для санитизации и валидации ввода
     function sanitizeAndValidateInput(input) {
@@ -684,55 +609,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return sanitized;
     }
-
-    // Модифицируем обработчик события для кнопки поиска
-    searchButton.addEventListener('click', function() {
-        console.log('Кнопка поиска нажата');
-        const rawQuery = searchInput.value.trim();
-        
-        // Применяем санитизацию и валидацию
-        const query = sanitizeAndValidateInput(rawQuery);
-        console.log('Поисковый запрос после санитизации:', query);
-        
-        if (query.length < 3) {
-            console.log('Запрос слишком короткий');
-            errorMessageElement.textContent = 'Пожалуйста, введите минимум 3 символа для поиска';
-            errorMessageElement.classList.add('visible');
-            return;
-        }
-
-        // Показываем таблицу при поиске
-        tableContainer.style.display = 'block';
-        
-        // Очищаем предыдущие результаты
-        tableBody.innerHTML = '';
-        errorMessageElement.classList.remove('visible');
-        
-        // Загружаем данные, если они еще не загружены
-        if (!jsonDataLoaded) {
-            console.log('Данные еще не загружены, загружаем...');
-            loadMessagesFromJSON();
-        }
-        
-        // Фильтруем сообщения
-        const filteredMessages = filterMessagesByRelevance(allMessagesFromJSON, query);
-        console.log('Найдено сообщений:', filteredMessages.length);
-        
-        // Отображаем результаты
-        displayMessages(filteredMessages);
-    });
-
-    // Добавляем обработку нажатия Enter в поле поиска
-    searchInput.addEventListener('keyup', (event) => {
-        if (event.key === 'Enter') {
-            console.log('Нажата клавиша Enter в поле поиска');
-            // Исправляем ошибку с handleSearch - вызываем клик по кнопке поиска
-            searchButton.click();
-        }
-        
-        if (errorMessageElement && errorMessageElement.classList.contains('visible')) {
-            errorMessageElement.textContent = '';
-            errorMessageElement.classList.remove('visible');
-        }
-    });
 }); 
