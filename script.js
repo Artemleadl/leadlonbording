@@ -76,8 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Скрываем таблицу при загрузке страницы
-    tableContainer.style.display = 'none';
+    // ПРИНУДИТЕЛЬНО ПОКАЗЫВАЕМ ТАБЛИЦУ
+    console.log('Принудительное отображение таблицы');
+    tableContainer.style.display = 'block';
+    tableContainer.style.visibility = 'visible';
+    tableContainer.style.opacity = '1';
     
     // Карточки с ценами всегда показываем
     if (priceCards) {
@@ -476,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Рейтинг формируем в отдельной ячейке
             const ratingCell = document.createElement('td');
             ratingCell.className = 'rating-cell';
-            ratingCell.appendChild(ratingStars);
+            ratingCell.innerHTML = ratingStars;
             
             // Текст сообщения
             const textCell = document.createElement('td');
@@ -491,118 +494,51 @@ document.addEventListener('DOMContentLoaded', () => {
             tableBody.appendChild(row);
         });
         
+        // ПРИНУДИТЕЛЬНО ПОКАЗЫВАЕМ ТАБЛИЦУ
+        console.log('Принудительное отображение таблицы после добавления сообщений');
+        tableContainer.style.display = 'block';
+        tableContainer.style.visibility = 'visible';
+        tableContainer.style.opacity = '1';
+        
         // Скрываем индикатор загрузки
         if (loadingContainer) {
             loadingContainer.style.display = 'none';
         }
     }
 
-    // Обработчик клика по кнопке поиска или нажатия Enter
+    // Добавляем обработчик события для кнопки поиска
     searchButton.addEventListener('click', function() {
-        console.log('Нажата кнопка поиска');
+        console.log('Кнопка поиска нажата');
+        const query = searchInput.value.trim();
+        console.log('Поисковый запрос:', query);
         
-        // Скрываем предыдущую ошибку
+        if (query.length < 3) {
+            console.log('Запрос слишком короткий');
+            errorMessageElement.textContent = 'Пожалуйста, введите минимум 3 символа для поиска';
+            errorMessageElement.classList.add('visible');
+            return;
+        }
+
+        // Показываем таблицу при поиске
+        tableContainer.style.display = 'block';
+        
+        // Очищаем предыдущие результаты
+        tableBody.innerHTML = '';
         errorMessageElement.classList.remove('visible');
         
-        // Проверяем, что введен текст в поиск
-        const searchText = searchInput.value.trim();
-        if (searchText.length < 15) {
-            console.log('Введен слишком короткий запрос:', searchText);
-            errorMessageElement.textContent = 'Пожалуйста, введите запрос длиной не менее 15 символов.';
-            errorMessageElement.classList.add('visible');
-            return;
-        }
-        
-        console.log('Поисковый запрос:', searchText);
-        
-        // Отображаем индикатор загрузки
-        if (loadingContainer) {
-            loadingContainer.style.display = 'flex';
-        }
-        
-        // Проверяем, загружены ли данные
-        if (!jsonDataLoaded && jsonLoadAttempts < 3) {
-            console.log('Данные не загружены, пробуем загрузить еще раз...');
+        // Загружаем данные, если они еще не загружены
+        if (!jsonDataLoaded) {
+            console.log('Данные еще не загружены, загружаем...');
             loadMessagesFromJSON();
-            setTimeout(() => {
-                // Повторно вызываем обработчик после повторной загрузки
-                if (jsonDataLoaded) {
-                    console.log('Данные успешно загружены, продолжаем поиск');
-                    processSearch(searchText);
-                } else {
-                    console.error('Не удалось загрузить данные после повторной попытки');
-                    errorMessageElement.textContent = 'Ошибка загрузки данных. Пожалуйста, обновите страницу.';
-                    errorMessageElement.classList.add('visible');
-                    if (loadingContainer) loadingContainer.style.display = 'none';
-                }
-            }, 2000); // Даем 2 секунды на загрузку
-            return;
         }
         
-        // Если данные все еще не загружены после повторных попыток, используем встроенный набор сообщений
-        if (!jsonDataLoaded || allMessagesFromJSON.length === 0) {
-            console.log('Используем встроенные сообщения, так как JSON не загрузился');
-            allMessagesFromJSON = [
-                { text: "Ищу разработчика для создания сайта на Тильде с нуля. Нужен лендинг с формой заявки и интеграцией оплаты. Бюджет 500€.", category: "develop", rating: 4 },
-                { text: "Помогите сделать сайт на Тильде. Есть референсы, нужно сделать похожий, но с нашим брендом. Срок - 2 недели. Бюджет 250-300€.", category: "develop", rating: 3 },
-                { text: "Хочу заказать лендинг на Тильде для продажи курсов по психологии. Нужны красивые анимации и интеграция с Getcourse. Бюджет до 400€.", category: "develop", rating: 5 },
-                { text: "Требуется помощь с уже существующим сайтом на Тильде. Нужно исправить несколько багов и добавить функциональность. Готов заплатить 200€ за помощь.", category: "develop", rating: 4 },
-                { text: "Ищу специалиста по Тильде для разработки онлайн-магазина. Нужны фильтры товаров, корзина, оплата. Бюджет 600-800€.", category: "develop", rating: 5 },
-                { text: "Нужен сайт-визитка для компании на Тильде. Минималистичный дизайн, 5-7 страниц. Бюджет до 300€.", category: "develop", rating: 3 },
-                { text: "Хочу заказать сайт для своего фотостудии на Тильде. 10 страниц, форма бронирования, галерея работ. Бюджет 450€.", category: "develop", rating: 4 },
-                { text: "Нужен лендинг для event-агентства на Тильде. Важен красивый дизайн и анимации. Бюджет до 500€.", category: "develop", rating: 5 },
-                { text: "Ищу разработчика Тильды для создания сайта для юриста. Строгий дизайн, форма записи на консультацию. Бюджет 350€.", category: "develop", rating: 4 },
-                { text: "Нужно сделать сайт для ресторана на Тильде. Меню, бронирование столиков, отзывы. Бюджет 400-500€.", category: "develop", rating: 5 }
-            ];
-            jsonDataLoaded = true;
-        }
+        // Фильтруем сообщения
+        const filteredMessages = filterMessagesByRelevance(allMessagesFromJSON, query);
+        console.log('Найдено сообщений:', filteredMessages.length);
         
-        processSearch(searchText);
+        // Отображаем результаты
+        displayMessagesInTable(filteredMessages);
     });
-    
-    // Функция обработки поиска
-    function processSearch(searchText) {
-        // Фильтруем релевантные сообщения
-        const relevantMessages = filterMessagesByRelevance(allMessagesFromJSON, searchText);
-        console.log(`Найдено ${relevantMessages.length} релевантных сообщений`);
-        
-        // Скрываем индикатор загрузки
-        if (loadingContainer) {
-            loadingContainer.style.display = 'none';
-        }
-        
-        // Проверяем, есть ли релевантные сообщения
-        if (relevantMessages.length === 0) {
-            // Если нет релевантных сообщений, проверяем, есть ли запрос связан с Тильдой
-            if (searchText.toLowerCase().includes('тильд') || searchText.toLowerCase().includes('tild')) {
-                console.log('Запрос связан с Тильдой, ищем сообщения только по этому ключевому слову');
-                const tildaMessages = allMessagesFromJSON.filter(msg => 
-                    msg.text && (msg.text.toLowerCase().includes('тильд') || msg.text.toLowerCase().includes('tild'))
-                );
-                
-                if (tildaMessages.length > 0) {
-                    displayMessagesInTable(tildaMessages.slice(0, 10));
-                    tableContainer.style.display = 'block';
-                    if (priceCards) priceCards.style.display = 'none';
-                    return;
-                }
-            }
-            
-            console.log('Нет релевантных сообщений для отображения');
-            errorMessageElement.textContent = 'Нет результатов, соответствующих вашему запросу. Пожалуйста, используйте другие ключевые слова.';
-            errorMessageElement.classList.add('visible');
-            tableContainer.style.display = 'none';
-            if (priceCards) priceCards.style.display = 'block';
-            return;
-        }
-        
-        // Отображаем релевантные сообщения в таблице
-        displayMessagesInTable(relevantMessages);
-        
-        // Показываем таблицу и скрываем карточки с ценами
-        tableContainer.style.display = 'block';
-        if (priceCards) priceCards.style.display = 'none';
-    }
 
     // Добавляем обработку нажатия Enter в поле поиска
     searchInput.addEventListener('keyup', (event) => {
