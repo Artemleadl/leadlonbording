@@ -529,11 +529,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             toShow.forEach((message, index) => {
                 const row = document.createElement('tr');
+                // Ячейка с текстом сообщения
                 const textCell = document.createElement('td');
                 textCell.textContent = sanitizeAndValidateInput(message.text);
                 row.appendChild(textCell);
+                // Ячейка с рейтингом
                 const ratingCell = document.createElement('td');
-                ratingCell.innerHTML = createRatingEmojis(index, 2);
+                ratingCell.className = 'rating-cell';
+                // Используем интерактивный компонент рейтинга
+                ratingCell.appendChild(createRatingComponent(index));
                 row.appendChild(ratingCell);
                 tableBody.appendChild(row);
             });
