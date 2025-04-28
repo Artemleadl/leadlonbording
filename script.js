@@ -616,4 +616,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return sanitized;
     }
+
+    // Функция для создания таблицы с данными
+    function createTable(data) {
+        const tableContainer = document.getElementById('tableContainer');
+        tableContainer.innerHTML = ''; // Очищаем контейнер
+
+        const table = document.createElement('table');
+        table.className = 'invoice-table';
+        table.id = 'invoiceTable';
+
+        // Создаем заголовок таблицы
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th>Сообщение</th>
+            </tr>
+        `;
+        table.appendChild(thead);
+
+        // Создаем тело таблицы
+        const tbody = document.createElement('tbody');
+        data.forEach((item) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.message}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+
+        // Добавляем таблицу в контейнер
+        tableContainer.appendChild(table);
+    }
+
+    // Функция для загрузки данных
+    async function loadData() {
+        try {
+            const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+            const data = await response.json();
+            return data.map(item => ({
+                message: item.body
+            }));
+        } catch (error) {
+            console.error('Ошибка при загрузке данных:', error);
+            return [];
+        }
+    }
+
+    // Функция инициализации
+    async function initialize() {
+        const data = await loadData();
+        createTable(data);
+    }
+
+    // Запускаем инициализацию при загрузке страницы
+    document.addEventListener('DOMContentLoaded', initialize);
 }); 

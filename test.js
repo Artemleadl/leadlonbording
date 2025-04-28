@@ -57,6 +57,11 @@ function runAllTests() {
 }
 
 // Для запуска в браузере:
-window.runAllTests = runAllTests;
-// Для Node.js (если потребуется):
-if (typeof module !== 'undefined') module.exports = { runAllTests }; 
+if (typeof window !== 'undefined') window.runAllTests = runAllTests;
+// Для Node.js:
+if (typeof module !== 'undefined') module.exports = {
+    runAllTests,
+    filterMessagesByRelevance,
+    sanitizeAndValidateInput,
+    validateMessageStructure
+}; 

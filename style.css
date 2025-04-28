@@ -274,9 +274,14 @@ body {
   background-color: #f8f9fa;
 }
 
-/* Стили для рейтинга */
-.rating {
-  cursor: pointer;
+/* Удалены стили для компонента рейтинга */
+
+/* Стили для таблицы с рейтингом */
+.invoice-table td .rating {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 40px;
 }
 
 .card {
