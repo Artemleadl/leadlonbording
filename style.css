@@ -324,10 +324,30 @@ body {
   cursor: pointer;
 }
 
+.rating-form-2 {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+}
 .rating-form-2 svg {
-  height: 3rem;
-  width: 3rem;
-  margin: 0.5rem;
+  width: 32px;
+  height: 32px;
+  margin: 0 4px;
+  transition: filter 0.2s;
+}
+.rating-form-2 input[type="radio"] {
+  display: none;
+}
+.rating-form-2 label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.rating-form-2 input[type="radio"]:checked + svg {
+  filter: drop-shadow(0 0 4px #19ad88);
 }
 
 #radios label {
@@ -403,101 +423,6 @@ body {
 
 .font-medium {
   font-weight: 500;
-}
-
-/* --- Star Rating Styles --- */
-.rating > label {
-  margin-right: 4px;
-}
-
-.rating:not(:checked) > input {
-  display: none;
-}
-
-.rating:not(:checked) > label {
-  float: right;
-  cursor: pointer;
-  font-size: 30px;
-}
-
-.rating:not(:checked) > label > svg {
-  fill: #666;
-  transition: fill 0.3s ease;
-}
-
-.rating > input:checked ~ label > svg {
-  fill: #ffa723;
-}
-
-.rating:not(:checked) > label:hover ~ label > svg,
-.rating:not(:checked) > label:hover > svg {
-  fill: #ff9e0b;
-}
-
-#star1:hover ~ label > svg,
-#star1:hover > svg {
-  fill: #a23c3c !important;
-}
-
-#star2:hover ~ label > svg,
-#star2:hover > svg {
-  fill: #99542d !important;
-}
-
-#star3:hover ~ label > svg,
-#star3:hover > svg {
-  fill: #9f7e18 !important;
-}
-
-#star4:hover ~ label > svg,
-#star4:hover > svg {
-  fill: #22885e !important;
-}
-
-#star5:hover ~ label > svg,
-#star5:hover > svg {
-  fill: #7951ac !important;
-}
-
-#star1:checked ~ label > svg {
-  fill: #ef4444;
-}
-
-#star2:checked ~ label > svg {
-  fill: #e06c2b;
-}
-
-#star3:checked ~ label > svg {
-  fill: #eab308;
-}
-
-#star4:checked ~ label > svg {
-  fill: #19c37d;
-}
-
-#star5:checked ~ label > svg {
-  fill: #ab68ff;
-}
-
-/* Дополнительные стили для рейтинга в таблице */
-.invoice-table .rating {
-  display: flex;
-  flex-direction: row-reverse;
-  justify-content: flex-start;
-}
-
-.invoice-table .rating label {
-  font-size: 20px; /* Немного уменьшен размер для компактности */
-  margin-right: 2px; /* Меньший отступ между звездами */
-}
-
-.invoice-table .rating label svg {
-  width: 18px; /* Уменьшенный размер SVG */
-  height: 18px;
-}
-
-.invoice-table td .rating {
-  min-width: 120px; /* Минимальная ширина для рейтинга */
 }
 
 /* --- Стили для карточек --- */
