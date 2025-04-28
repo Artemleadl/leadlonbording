@@ -365,19 +365,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return profanityList.some(word => textLower.includes(word));
     }
 
-    // Функция для создания звезд рейтинга
-    function createRatingStars(messageId) {
-        let starsHtml = `<div class="rating">`;
-        for (let i = 5; i >= 1; i--) {
-            starsHtml += `
-                <input type="radio" id="star${i}-${messageId}" name="rating-${messageId}" value="${i}" />
-                <label for="star${i}-${messageId}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>
-                </label>
-            `;
-        }
-        starsHtml += `</div>`;
-        return starsHtml;
+    // Новая функция для рейтинга-эмодзи
+    function createRatingEmojis(messageId, value = 2) {
+        // value: 1 - sad, 2 - neutral, 3 - happy
+        return `
+        <div class="rating-form rating-form-2">
+          <form id="radios-${messageId}" class="rating-form">
+            <label>
+              <input type="radio" name="emoji-${messageId}" class="super-sad" value="1" ${value === 1 ? 'checked' : ''} />
+              <svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 15c1.333-1 2.667-1 4 0" stroke="#000" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>
+            </label>
+            <label>
+              <input type="radio" name="emoji-${messageId}" class="neutral" value="2" ${value === 2 ? 'checked' : ''} />
+              <svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15" stroke="#000" stroke-width="1.5"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>
+            </label>
+            <label>
+              <input type="radio" name="emoji-${messageId}" class="super-happy" value="3" ${value === 3 ? 'checked' : ''} />
+              <svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14c1.333 1 2.667 1 4 0" stroke="#000" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>
+            </label>
+          </form>
+        </div>`;
     }
 
     // Создаем карту ключевых слов и их синонимов/связанных терминов
@@ -526,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 textCell.textContent = sanitizeAndValidateInput(message.text);
                 row.appendChild(textCell);
                 const ratingCell = document.createElement('td');
-                ratingCell.innerHTML = createRatingStars(index);
+                ratingCell.innerHTML = createRatingEmojis(index, 2);
                 row.appendChild(ratingCell);
                 tableBody.appendChild(row);
             });
