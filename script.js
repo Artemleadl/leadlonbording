@@ -672,4 +672,118 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Запускаем инициализацию при загрузке страницы
     document.addEventListener('DOMContentLoaded', initialize);
+
+    // Функция для создания компонента рейтинга
+    function createRatingComponent(messageId) {
+        const ratingContainer = document.createElement('div');
+        ratingContainer.className = 'rating-container';
+        
+        const ratingForm = document.createElement('form');
+        ratingForm.className = 'rating-form rating-form-2';
+        ratingForm.id = `rating-form-${messageId}`;
+        
+        const radios = document.createElement('div');
+        radios.id = 'radios';
+        
+        // Создаем три кнопки рейтинга
+        const ratings = [
+            { class: 'super-happy', value: 'positive' },
+            { class: 'neutral', value: 'neutral' },
+            { class: 'super-sad', value: 'negative' }
+        ];
+        
+        ratings.forEach(rating => {
+            const label = document.createElement('label');
+            label.className = rating.class;
+            
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = `rating-${messageId}`;
+            input.value = rating.value;
+            input.className = 'input';
+            
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.innerHTML = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>';
+            
+            label.appendChild(input);
+            label.appendChild(svg);
+            radios.appendChild(label);
+        });
+        
+        ratingForm.appendChild(radios);
+        ratingContainer.appendChild(ratingForm);
+        
+        // Добавляем обработчик изменения рейтинга
+        ratingForm.addEventListener('change', (e) => {
+            const rating = e.target.value;
+            saveRating(messageId, rating);
+        });
+        
+        return ratingContainer;
+    }
+
+    // Функция для сохранения рейтинга
+    function saveRating(messageId, rating) {
+        const ratings = JSON.parse(localStorage.getItem('messageRatings') || '{}');
+        ratings[messageId] = rating;
+        localStorage.setItem('messageRatings', JSON.stringify(ratings));
+    }
+
+    // Функция для получения рейтинга
+    function getRating(messageId) {
+        const ratings = JSON.parse(localStorage.getItem('messageRatings') || '{}');
+        return ratings[messageId] || null;
+    }
+
+    // Модифицируем функцию createResultsTable
+    function createResultsTable(results) {
+        const table = document.createElement('table');
+        table.className = 'results-table';
+        
+        // Создаем заголовок таблицы
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        
+        const headers = ['Сообщение', 'Рейтинг'];
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+        
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+        
+        // Создаем тело таблицы
+        const tbody = document.createElement('tbody');
+        
+        results.forEach(result => {
+            const row = document.createElement('tr');
+            
+            // Ячейка с сообщением
+            const messageCell = document.createElement('td');
+            messageCell.textContent = result.message;
+            row.appendChild(messageCell);
+            
+            // Ячейка с рейтингом
+            const ratingCell = document.createElement('td');
+            ratingCell.className = 'rating-cell';
+            const ratingComponent = createRatingComponent(result.id);
+            ratingCell.appendChild(ratingComponent);
+            
+            // Устанавливаем сохраненный рейтинг, если он есть
+            const savedRating = getRating(result.id);
+            if (savedRating) {
+                const radio = ratingComponent.querySelector(`input[value="${savedRating}"]`);
+                if (radio) radio.checked = true;
+            }
+            
+            row.appendChild(ratingCell);
+            tbody.appendChild(row);
+        });
+        
+        table.appendChild(tbody);
+        return table;
+    }
 }); 
