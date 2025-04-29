@@ -366,25 +366,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Новая функция для рейтинга-эмодзи
-    function createRatingEmojis(messageId, value = 2) {
-        // value: 1 - sad, 2 - neutral, 3 - happy
-        return `
-        <div class="rating-form rating-form-2">
-          <form id="radios-${messageId}" class="rating-form">
-            <label>
-              <input type="radio" name="emoji-${messageId}" class="super-sad" value="1" ${value === 1 ? 'checked' : ''} />
-              <svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 15c1.333-1 2.667-1 4 0" stroke="#000" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>
-            </label>
-            <label>
-              <input type="radio" name="emoji-${messageId}" class="neutral" value="2" ${value === 2 ? 'checked' : ''} />
-              <svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15" stroke="#000" stroke-width="1.5"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>
-            </label>
-            <label>
-              <input type="radio" name="emoji-${messageId}" class="super-happy" value="3" ${value === 3 ? 'checked' : ''} />
-              <svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14c1.333 1 2.667 1 4 0" stroke="#000" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>
-            </label>
-          </form>
-        </div>`;
+    function createRatingComponent(messageId) {
+        const ratingContainer = document.createElement('div');
+        ratingContainer.className = 'rating-container';
+
+        const ratingForm = document.createElement('form');
+        ratingForm.className = 'rating-form rating-form-2';
+        ratingForm.id = `rating-form-${messageId}`;
+
+        const radios = document.createElement('div');
+        radios.id = 'radios';
+
+        // Три варианта рейтинга: супер-счастлив, нейтрально, супер-грустно
+        const ratings = [
+            {
+                class: 'super-happy',
+                value: 'super-happy',
+                svg: `<svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14c1.333 1 2.667 1 4 0" stroke="#000" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>`
+            },
+            {
+                class: 'neutral',
+                value: 'neutral',
+                svg: `<svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15" stroke="#000" stroke-width="1.5"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>`
+            },
+            {
+                class: 'super-sad',
+                value: 'super-sad',
+                svg: `<svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 15c1.333-1 2.667-1 4 0" stroke="#000" stroke-width="1.5" fill="none"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>`
+            }
+        ];
+
+        // Получаем сохранённый рейтинг
+        const savedRating = getRating(messageId);
+
+        ratings.forEach(rating => {
+            const label = document.createElement('label');
+            label.className = rating.class;
+
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = `rating-${messageId}`;
+            input.value = rating.value;
+            input.className = rating.class;
+            if (savedRating === rating.value) input.checked = true;
+
+            label.appendChild(input);
+            label.innerHTML += rating.svg;
+            radios.appendChild(label);
+        });
+
+        ratingForm.appendChild(radios);
+        ratingContainer.appendChild(ratingForm);
+
+        // Обработчик изменения рейтинга
+        ratingForm.addEventListener('change', (e) => {
+            const rating = e.target.value;
+            saveRating(messageId, rating);
+        });
+
+        return ratingContainer;
     }
 
     // Создаем карту ключевых слов и их синонимов/связанных терминов
@@ -676,56 +716,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Запускаем инициализацию при загрузке страницы
     document.addEventListener('DOMContentLoaded', initialize);
-
-    // Функция для создания компонента рейтинга
-    function createRatingComponent(messageId) {
-        const ratingContainer = document.createElement('div');
-        ratingContainer.className = 'rating-container';
-        
-        const ratingForm = document.createElement('form');
-        ratingForm.className = 'rating-form rating-form-2';
-        ratingForm.id = `rating-form-${messageId}`;
-        
-        const radios = document.createElement('div');
-        radios.id = 'radios';
-        
-        // Создаем три кнопки рейтинга
-        const ratings = [
-            { class: 'super-happy', value: 'positive' },
-            { class: 'neutral', value: 'neutral' },
-            { class: 'super-sad', value: 'negative' }
-        ];
-        
-        ratings.forEach(rating => {
-            const label = document.createElement('label');
-            label.className = rating.class;
-            
-            const input = document.createElement('input');
-            input.type = 'radio';
-            input.name = `rating-${messageId}`;
-            input.value = rating.value;
-            input.className = 'input';
-            
-            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('viewBox', '0 0 24 24');
-            svg.innerHTML = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>';
-            
-            label.appendChild(input);
-            label.appendChild(svg);
-            radios.appendChild(label);
-        });
-        
-        ratingForm.appendChild(radios);
-        ratingContainer.appendChild(ratingForm);
-        
-        // Добавляем обработчик изменения рейтинга
-        ratingForm.addEventListener('change', (e) => {
-            const rating = e.target.value;
-            saveRating(messageId, rating);
-        });
-        
-        return ratingContainer;
-    }
 
     // Функция для сохранения рейтинга
     function saveRating(messageId, rating) {
