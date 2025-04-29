@@ -710,8 +710,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Функция инициализации
     async function initialize() {
-        const data = await loadData();
-        createTable(data);
+        // Загружаем все сообщения (или используем уже загруженные)
+        if (!jsonDataLoaded) {
+            loadMessagesFromJSON();
+        }
+        // Ждём загрузки данных (если асинхронно)
+        setTimeout(() => {
+            displayMessages(allMessagesFromJSON);
+        }, 1000);
     }
 
     // Запускаем инициализацию при загрузке страницы
