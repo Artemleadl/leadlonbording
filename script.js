@@ -634,10 +634,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     'accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: {
+                body: JSON.stringify({
                     query: query,
                     limit: 25
-                }
+                })
             });
             
             const response = await fetch('https://api.leadlbot.com/v1/telegram/search', {
