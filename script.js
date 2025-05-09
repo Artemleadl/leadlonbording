@@ -1,7 +1,9 @@
+console.log('Скрипт загружен!');
+
 // Полностью восстановленный скрипт с интеграцией базы данных
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOMContentLoaded event - скрипт запущен');
+    console.log('DOM загружен!');
     
     // Форма поиска
     const searchInput = document.querySelector('.search_bar');
@@ -47,13 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('КАРТОЧКИ НЕ НАЙДЕНЫ!');
     }
 
-    console.log('Найдены элементы:', { 
-        'Поле ввода': !!searchInput, 
-        'Кнопка поиска': !!searchButton,
-        'Элемент ошибки': !!errorMessageElement,
-        'Тело таблицы': !!tableBody,
-        'Контейнер таблицы': !!tableContainer,
-        'Карточки цен': !!priceCards
+    console.log('Элементы найдены:', {
+        searchInput: !!searchInput,
+        searchButton: !!searchButton,
+        errorMessageElement: !!errorMessageElement,
+        tableBody: !!tableBody,
+        tableContainer: !!tableContainer,
+        priceCards: !!priceCards
     });
 
     // Проверка всех необходимых элементов
@@ -552,13 +554,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ОТОБРАЖЕНИЕ ТОЛЬКО ПЕРВЫХ 10 СООБЩЕНИЙ ---
     function displayMessages(messages) {
+        console.log('Начало отображения сообщений:', messages);
+        
         if (!tableBody || !tableContainer) {
             console.error('ОШИБКА: Таблица не найдена!');
             return;
         }
+        
         tableBody.innerHTML = '';
         const toShow = messages.slice(0, 10);
+        console.log('Сообщения для отображения:', toShow);
+        
         if (!toShow || toShow.length === 0) {
+            console.log('Нет сообщений для отображения');
             const row = document.createElement('tr');
             const cell = document.createElement('td');
             cell.colSpan = 2;
@@ -567,47 +575,110 @@ document.addEventListener('DOMContentLoaded', () => {
             row.appendChild(cell);
             tableBody.appendChild(row);
         } else {
+            console.log('Отображаем сообщения');
             toShow.forEach((message, index) => {
+                console.log('Обработка сообщения:', message);
                 const row = document.createElement('tr');
                 // Ячейка с текстом сообщения
                 const textCell = document.createElement('td');
-                textCell.textContent = sanitizeAndValidateInput(message.text);
+                const messageText = message.text || message.message;
+                console.log('Текст сообщения:', messageText);
+                textCell.textContent = sanitizeAndValidateInput(messageText);
                 row.appendChild(textCell);
                 // Ячейка с рейтингом
                 const ratingCell = document.createElement('td');
                 ratingCell.className = 'rating-cell';
                 // Используем интерактивный компонент рейтинга
-                ratingCell.appendChild(createRatingComponent(index));
+                ratingCell.appendChild(createRatingComponent(message.id || index));
                 row.appendChild(ratingCell);
                 tableBody.appendChild(row);
             });
         }
+        
+        console.log('Показываем таблицу');
         tableContainer.style.display = 'block';
         tableContainer.style.visibility = 'visible';
         tableContainer.style.opacity = '1';
+        
         // Удаляем пагинацию, если она была
         let pagBlock = document.querySelector('.pagination');
         if (pagBlock) pagBlock.remove();
     }
 
     // --- Поиск с учётом пагинации ---
-    searchButton.addEventListener('click', function() {
+    searchButton.addEventListener('click', async function() {
         console.log('Кнопка поиска нажата');
         const rawQuery = searchInput.value.trim();
+        console.log('Введенный запрос:', rawQuery);
+        
         const query = sanitizeAndValidateInput(rawQuery);
+        console.log('Обработанный запрос:', query);
+        
         if (query.length < 3) {
+            console.log('Запрос слишком короткий');
             errorMessageElement.textContent = 'Пожалуйста, введите минимум 3 символа для поиска';
             errorMessageElement.classList.add('visible');
             return;
         }
+        
+        console.log('Подготовка к отправке запроса');
         tableContainer.style.display = 'block';
         tableBody.innerHTML = '';
         errorMessageElement.classList.remove('visible');
-        if (!jsonDataLoaded) {
-            loadMessagesFromJSON();
+
+        try {
+            console.log('Отправляем запрос на API:', {
+                url: 'https://api.leadlbot.com/v1/telegram/search',
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: {
+                    query: query,
+                    limit: 25
+                }
+            });
+            
+            const response = await fetch('https://api.leadlbot.com/v1/telegram/search', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    query: query,
+                    limit: 25
+                })
+            });
+
+            console.log('Получен ответ от API:', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Полученные данные:', data);
+            
+            if (!data || !Array.isArray(data)) {
+                console.error('Некорректный формат данных:', data);
+                errorMessageElement.textContent = 'Получены некорректные данные от сервера';
+                errorMessageElement.classList.add('visible');
+                return;
+            }
+            
+            console.log('Отображаем результаты:', data.length, 'сообщений');
+            displayMessages(data);
+        } catch (error) {
+            console.error('Ошибка при выполнении поиска:', error);
+            errorMessageElement.textContent = 'Произошла ошибка при поиске. Пожалуйста, попробуйте позже.';
+            errorMessageElement.classList.add('visible');
         }
-        const filteredMessages = filterMessagesByRelevance(allMessagesFromJSON, query);
-        displayMessages(filteredMessages);
     });
 
     searchInput.addEventListener('keyup', (event) => {
