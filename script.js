@@ -607,37 +607,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Поиск с учётом пагинации ---
     searchButton.addEventListener('click', async function() {
-        console.log('Кнопка поиска нажата');
+        console.log('=== НАЧАЛО ПОИСКА ===');
+        console.log('1. Кнопка поиска нажата');
+        
         const rawQuery = searchInput.value.trim();
-        console.log('Введенный запрос:', rawQuery);
+        console.log('2. Введенный запрос:', rawQuery);
         
         const query = sanitizeAndValidateInput(rawQuery);
-        console.log('Обработанный запрос:', query);
+        console.log('3. Обработанный запрос:', query);
         
         if (query.length < 3) {
-            console.log('Запрос слишком короткий');
+            console.log('4. Запрос слишком короткий');
             errorMessageElement.textContent = 'Пожалуйста, введите минимум 3 символа для поиска';
             errorMessageElement.classList.add('visible');
             return;
         }
         
-        console.log('Подготовка к отправке запроса');
+        console.log('4. Подготовка к отправке запроса');
         tableContainer.style.display = 'block';
         tableBody.innerHTML = '';
         errorMessageElement.classList.remove('visible');
 
         try {
-            console.log('Отправляем запрос на API:', {
+            const requestBody = {
+                query: query,
+                limit: 25
+            };
+            
+            console.log('5. Отправляем запрос на API:', {
                 url: 'https://api.leadlbot.com/v1/telegram/search',
                 method: 'POST',
                 headers: {
                     'accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    query: query,
-                    limit: 25
-                })
+                body: requestBody
             });
             
             const response = await fetch('https://api.leadlbot.com/v1/telegram/search', {
@@ -646,36 +650,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     'accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    query: query,
-                    limit: 25
-                })
+                body: JSON.stringify(requestBody)
             });
 
-            console.log('Получен ответ от API:', {
+            console.log('6. Получен ответ от API:', {
                 status: response.status,
                 statusText: response.statusText,
                 headers: Object.fromEntries(response.headers.entries())
             });
             
             if (!response.ok) {
+                console.error('7. Ошибка ответа:', response.status, response.statusText);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
-            console.log('Полученные данные:', data);
+            console.log('7. Полученные данные:', data);
             
             if (!data || !Array.isArray(data)) {
-                console.error('Некорректный формат данных:', data);
+                console.error('8. Некорректный формат данных:', data);
                 errorMessageElement.textContent = 'Получены некорректные данные от сервера';
                 errorMessageElement.classList.add('visible');
                 return;
             }
             
-            console.log('Отображаем результаты:', data.length, 'сообщений');
+            console.log('8. Отображаем результаты:', data.length, 'сообщений');
             displayMessages(data);
+            console.log('=== КОНЕЦ ПОИСКА ===');
         } catch (error) {
-            console.error('Ошибка при выполнении поиска:', error);
+            console.error('ОШИБКА ПОИСКА:', error);
             errorMessageElement.textContent = 'Произошла ошибка при поиске. Пожалуйста, попробуйте позже.';
             errorMessageElement.classList.add('visible');
         }
